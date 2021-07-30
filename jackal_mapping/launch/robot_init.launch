@@ -1,0 +1,46 @@
+<launch>
+    <arg name="move_forward_only" default="false"/>
+    <arg name="use_map_topic" default="true"/>>
+  <!-- turtle bot declation -->
+    <arg name='first_robot' default="tb3_1"/>
+    <arg name="first_robot_x_pos" default=" 0.0"/>
+    <arg name="first_robot_y_pos" default=" 0.0"/>
+    <arg name="first_robot_z_pos" default=" 0.0"/>
+    <arg name="first_robot_yaw"   default=" 0.0"/>
+  
+    <arg name="scan_topic" default="$(arg first_robot)/scan"/>
+
+  
+  <!-- spawn the robots and related information -->
+  <group ns = "/$(arg first_robot)">
+
+    <!--- Run gmapping -->
+    <include file="$(find jackal_mapping)/launch/include/gmapping.launch">
+      <arg name="scan_topic"    value="$(arg scan_topic)" />
+    </include>  
+  
+    <!--- Run Move Base -->
+    <include file="$(find jackal_mapping)/launch/include/move_base.launch" />
+  
+
+    <!-- include amcl for the first turtle bot -->
+    <include file="$(find jackal_mapping)/launch/include/amcl.launch">
+      <arg name="use_map_topic" value="$(arg use_map_topic)" />
+      <arg name="scan_topic"    value="$(arg scan_topic)" />
+    </include>
+  
+  
+  </group>
+  
+  <!-- include octomap for the first turtle bot -->
+  <include file="$(find jackal_mapping)/launch/includes/octomap.launch">
+    <arg name="namespace" value="$(arg first_robot)" />
+    <arg name="frame_id" value="$/odom"/>
+    <arg name="base_footprint" value="/base_link"/>
+    <arg name="pointcloud" value="$(arg first_robot)/velodyne_points"/>
+  </include>
+  
+  
+  <node pkg="tf" type="static_transform_publisher" name="world_to_$(arg first_robot)_tf_broadcaster"  args="0 0 0 0 0 0 /map /$(arg first_robot)/map 100"/>
+  
+  </launch>
